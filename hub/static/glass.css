@@ -1,0 +1,155 @@
+/* glass.css: the world layer, loaded last. Dark glass over the owner's desktop wallpaper (owner, 2026-11-15).
+
+   Three planes, back to front:
+   1. the wall: the photo, softly blurred (still readable as a place), with a veil whose strength glass.js sets from
+      the photo's brightness, a vignette, and a fine film grain so the frost reads as a material, not a fill;
+   2. panes: the sidebar, the top bar and every panel, tile and popover blur and saturate what is behind them, are lit
+      from the top left, and carry a specular rim (bright at the top-left corner, fading, catching again bottom right);
+   3. content: hairlines and translucent controls inside the panes; the white primary pill stays the brightest thing.
+   Status colour keeps its one job; nothing glows at rest. */
+
+/* ---------- 1. the wall ---------- */
+.wall, .veil { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.wall { background: var(--wall-url) center / cover no-repeat, radial-gradient(120% 90% at 30% 20%, #2a2c33, #111216 70%);
+  filter: blur(var(--wall-blur)) saturate(var(--wall-sat)); transform: scale(1.08); transition: opacity .6s var(--ease); }
+html[data-wall="loading"] .wall { opacity: 0; }
+.veil {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E"),
+    linear-gradient(125deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, 0) 38%),
+    radial-gradient(130% 100% at 50% 35%, rgba(var(--tint-rgb), calc(var(--veil) - .08)), rgba(var(--tint-rgb), calc(var(--veil) + .1)) 78%),
+    linear-gradient(rgba(var(--tint-rgb), .08), rgba(var(--tint-rgb), .22));
+  transition: background .6s var(--ease); }
+
+/* ---------- 2. panes ---------- */
+.side, .top, .panel, .kpi, .cmdbar, dialog, .ctx, .toast {
+  -webkit-backdrop-filter: var(--pane-blur); backdrop-filter: var(--pane-blur); }
+/* zero specificity: a panel's own position (sticky library, fixed drawer) always wins */
+:where(.panel, .kpi, .cmdbar) { position: relative; }
+.ag-detail { position: relative; top: auto; }   /* static in its grid; the rim needs a box to sit on */
+.panel, .kpi, .cmdbar, dialog, .ctx, .toast { background: var(--pane), rgba(var(--tint-rgb), var(--pane-a)); border-color: transparent; box-shadow: var(--lift); }
+/* the specular rim: a 1px gradient ring drawn with a mask, so corners keep their radius (::before: some panels
+   already use ::after, e.g. Workflows' "scroll for more" cue) */
+.panel::before, .kpi::before, .cmdbar::before, dialog::before, .ctx::before, .toast::before, .side::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: var(--rim); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; }
+.panel:hover, .kpi:hover { box-shadow: var(--lift), inset 0 0 0 1px rgba(255, 255, 255, .06); }
+
+/* sidebar: one tall pane down the left edge, darker than the panels so the page reads in front of it */
+.side { background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02) 40%, rgba(255, 255, 255, .04)), rgba(var(--tint-rgb), calc(var(--pane-a) + .14));
+  border-right: 0; }
+.side::before { border-radius: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .08) 30%, rgba(255, 255, 255, .05));
+  -webkit-mask: linear-gradient(90deg, transparent calc(100% - 1px), #000 0); mask: linear-gradient(90deg, transparent calc(100% - 1px), #000 0); padding: 0; }
+.nav a:hover, .side-sys > summary:hover, .keys-btn:hover { background: rgba(255, 255, 255, .07); }
+.nav a[aria-current="page"] { background: linear-gradient(150deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .09)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 0 0 1px rgba(255, 255, 255, .1), 0 8px 18px -12px rgba(0, 0, 0, .7); }
+.nav .cnt { background: rgba(255, 255, 255, .12); }
+.nav a[aria-current="page"] .cnt { background: rgba(255, 255, 255, .2); }
+.side-bottom { border-top-color: rgba(255, 255, 255, .08); }
+.side-sys #sys { background: rgba(255, 255, 255, .05); }
+
+/* top bar: a clear strip of glass over the page as it scrolls */
+.top { background: linear-gradient(180deg, rgba(var(--tint-rgb), calc(var(--pane-a) + .12)), rgba(var(--tint-rgb), var(--pane-a))); border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.fresh { background: rgba(255, 255, 255, .06); }
+
+/* KPI tiles: the hot needs-you tile keeps its amber edge over the rim */
+.kpi.need.hot::before { background: linear-gradient(150deg, rgba(var(--ember-rgb), .85), rgba(var(--ember-rgb), .25) 40%, rgba(var(--ember-rgb), .4)); }
+
+/* popovers float above the panes: denser glass */
+dialog, .ctx, .toast { background: var(--pane), rgba(var(--tint-rgb), .62); box-shadow: var(--lift), var(--shadow); }
+dialog::backdrop { background: rgba(4, 5, 8, .38); -webkit-backdrop-filter: blur(6px) saturate(120%); backdrop-filter: blur(6px) saturate(120%); }
+.toast { border: 0; }
+
+/* ---------- 3. content on glass ---------- */
+.btn { border-radius: var(--r-sm); background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.btn:hover { background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .2); }
+.btn.ghost { box-shadow: none; }
+.btn.primary { border-radius: 999px; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08), 0 8px 22px -12px rgba(255, 255, 255, .55); }
+.btn.primary:disabled { background: rgba(255, 255, 255, .12); color: var(--muted); }
+.btn.round { border-radius: 50%; }
+.select, .input, input[type="number"], input[type="time"] { background-color: rgba(0, 0, 0, .18); border-color: rgba(255, 255, 255, .12); }
+.seg { background: rgba(0, 0, 0, .22); border-color: rgba(255, 255, 255, .1); }
+.seg button[aria-pressed="true"] { background: rgba(255, 255, 255, .16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18); }
+.toggle input { background: rgba(0, 0, 0, .28); }
+.chip { background: rgba(255, 255, 255, .07); }
+.kbd { background: rgba(255, 255, 255, .07); }
+.bar { background: rgba(0, 0, 0, .3); }
+
+/* tables: the sticky head is its own strip of glass so rows don't show through it */
+.tbl th { background: rgba(var(--tint-rgb), .42); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
+.tbl tbody tr:hover { background: rgba(255, 255, 255, .05); }
+
+/* graph nodes and cards sit over wires: denser glass so a wire never shows through */
+/* nested glass: lighter than the pane they sit in, lit from the top left, dense enough that no wire shows through */
+.fnode, .fjob, .gn { background-color: var(--node-bg);
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .035) 55%, rgba(255, 255, 255, .06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 12px 24px -18px rgba(0, 0, 0, .9); }
+.fjob:hover, .fnode:hover { background-color: rgba(48, 50, 58, .78); }
+.fleet { background-image: radial-gradient(rgba(255, 255, 255, .09) 1px, transparent 1px); }
+
+/* wells for logs and code: dark glass */
+pre.log, .md pre, .stream { background: rgba(0, 0, 0, .34); }
+
+/* the plain dark choice: no photo, the same panes on a quiet ground */
+html[data-wall="none"] .wall { background: radial-gradient(120% 90% at 25% 15%, #2b2d35, #121317 65%); filter: none; transform: none; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .side, .top, .panel, .kpi, .cmdbar, dialog, .ctx, .toast { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .kpi, .cmdbar { background: #24262c; }
+  .side { background: #1b1c21; }
+  dialog, .ctx, .toast { background: #2a2c33; }
+}
+.kpi.need.hot { background: linear-gradient(180deg, rgba(var(--ember-rgb), .16), transparent 72%), var(--pane), rgba(var(--tint-rgb), var(--pane-a)); }
+
+/* a used-up quota: the full track is a red hatch and the figure red (Red Means Gone), never an empty-looking bar */
+.ql-seg.out .bar > i { background: repeating-linear-gradient(135deg, rgba(var(--neon-red-rgb), .75) 0 3px, rgba(var(--neon-red-rgb), .28) 3px 6px) !important; }
+.ql-seg.out b { color: var(--red); }
+
+/* checkboxes on glass (Settings → Calendars): a frosted square that fills system blue with a white tick */
+input[type="checkbox"]:not(.toggle input) { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; margin: 0; flex: none; border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, .24); background: rgba(0, 0, 0, .22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); cursor: pointer;
+  display: inline-grid; place-items: center; vertical-align: -3px; transition: background-color .15s, border-color .15s; }
+input[type="checkbox"]:not(.toggle input):checked { background: var(--arc); border-color: var(--arc); }
+input[type="checkbox"]:not(.toggle input):checked::after { content: ""; width: 8px; height: 4.5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+input[type="checkbox"]:not(.toggle input):focus-visible { outline: 2px solid var(--arc); outline-offset: 2px; }
+/* a link-like button inside running text (Settings: show the ntfy topic) */
+.linkish { padding: 0; border: 0; background: none; color: var(--arc-ink); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.topic-v { margin-left: 4px; }
+
+/* Analytics: today's Claude tokens by kind, one stacked bar in the Claude hue's steps */
+.tmix { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: rgba(0, 0, 0, .3); gap: 2px; }
+.tmix i { display: block; height: 100%; }
+.tm-0 { background: color-mix(in srgb, var(--claude) 38%, transparent); } .tm-1 { background: color-mix(in srgb, var(--claude) 62%, transparent); }
+.tm-2 { background: var(--claude-ink); } .tm-3 { background: var(--claude); }
+.tmix-k { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; font-size: var(--fs-sm); color: var(--muted); }
+.tmix-k span { display: flex; align-items: center; gap: 8px; }
+.tmix-k span i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.tmix-k b { margin-left: auto; color: var(--text); font-weight: 500; }
+
+/* Running tile: free slots are faint wells beside the lit ones */
+.kslot i.free { background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+
+/* Agents: runs that ended earlier today, under the live rows */
+.ag-earlier:empty { display: none; }
+.ag-earlier { padding: 6px 8px 10px; border-top: 1px solid var(--rule); }
+.ag-earlier .sect-h { padding: 8px 8px 6px; margin: 0; }
+.er { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 64px; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--r-sm); font-size: var(--fs-sm); color: var(--text-2); }
+.er:hover { background: rgba(255, 255, 255, .05); color: var(--text); }
+.er-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-t small { margin-left: 8px; color: var(--faint); font-size: 11px; }
+.er > .num:last-child { text-align: right; }
+
+/* Settings → Calendars: the glass checkbox sits on its label's centre line */
+label:has(> input[type="checkbox"]):not(.toggle) { display: inline-flex; align-items: center; gap: 7px; }
+label:has(> input[type="checkbox"]):not(.toggle) > input[type="checkbox"] { vertical-align: 0; }
+
+
+/* depth: the focal pane floats above the others (Routing always; Needs you while something waits) */
+.fleet-panel, .kpi.need.hot { box-shadow: var(--lift-hi); }
+.fleet-panel { background: var(--pane), rgba(var(--tint-rgb), calc(var(--pane-a) - .05)); }
+.fleet-panel::before { background: linear-gradient(150deg, rgba(255, 255, 255, .9), rgba(255, 255, 255, .26) 10%, rgba(255, 255, 255, .07) 32%, rgba(255, 255, 255, .04) 66%, rgba(255, 255, 255, .32)); }
+
+/* KPI figures: large and light, the tile's focal object (still SF Mono with tabular figures) */
+.kpi .kv { margin-top: 10px; font: 300 46px/1 var(--mono); letter-spacing: -.05em; }
+.kpi .kv small { letter-spacing: 0; }
+@media (max-width: 1100px) { .kpi .kv { font-size: 36px; } }

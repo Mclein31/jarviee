@@ -1,0 +1,115 @@
+/* Jarviee tokens. Dark only. The look is dark glass over the owner's desktop wallpaper (owner's call, 2026-11-15,
+   from visionOS-style references; it replaced the graphite desk): the photo, softly blurred and veiled, is the
+   ground; panels are frosted panes that blur and saturate it again, with a specular rim. Surfaces are white at low
+   alpha so the photo's colour shows through; the full palette keeps every hue on one job from tile to wire to pill.
+   Blue = the system: running work, selection, focus, links. Amber = you: needs-you and warnings.
+   Green done, red failed or out, violet fallback. Tiers own teal / lime / orchid / rose.
+   The variable names (--arc for the system hue, --ember for amber) are kept from the old HUD so every
+   module picks up the new world; read --arc as "system blue". Every status pairs a shape and a word
+   with its hue, so colour never carries meaning alone. */
+:root {
+  color-scheme: dark;
+  /* glass: surfaces are light at low alpha over the veiled photo; wells and tracks are dark at low alpha */
+  --bg: rgba(6, 7, 10, .34); --bg-deep: rgba(4, 5, 8, .42); --bg-side: rgba(10, 11, 14, .26);
+  --panel: rgba(255, 255, 255, .065); --panel-2: rgba(255, 255, 255, .09); --panel-3: rgba(255, 255, 255, .14);
+  --line: rgba(255, 255, 255, .1); --line-2: rgba(255, 255, 255, .14); --line-3: rgba(255, 255, 255, .24); --rule: rgba(255, 255, 255, .08);
+  --text: #f5f6f8; --text-2: #d6d9df; --muted: #adb2bb; --faint: #949aa3;
+  /* the veil over the photo: its strength is set from the wallpaper's brightness (glass.js), so text keeps AA */
+  --tint-rgb: 14, 15, 19; --veil: .62; --pane-a: .3;
+  --wall-url: none; --wall-blur: 30px;
+  /* a frosted pane: lit from the top left, blurring and saturating what lies behind it */
+  --pane: linear-gradient(150deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .045) 42%, rgba(255, 255, 255, .025) 70%, rgba(255, 255, 255, .06));
+  /* --pane-sat / --wall-sat are set from the wallpaper's own colourfulness (glass.js): a grey photo is pushed, a vivid one held back */
+  --pane-sat: 150%; --wall-sat: .92;
+  --pane-blur: blur(26px) saturate(var(--pane-sat)) brightness(1.05);
+  /* a crisp catch-light at the top-left corner that falls off fast, and a second, softer one at the bottom right */
+  --rim: linear-gradient(150deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, .22) 12%, rgba(255, 255, 255, .06) 34%, rgba(255, 255, 255, .03) 66%, rgba(255, 255, 255, .28));
+  --lift: inset 0 1px 0 rgba(255, 255, 255, .22), 0 22px 44px -28px rgba(0, 0, 0, .75), 0 2px 6px -2px rgba(0, 0, 0, .28);
+  /* the focal pane (Routing, a hot Needs you) floats a step above the rest */
+  --lift-hi: inset 0 1px 0 rgba(255, 255, 255, .28), 0 40px 80px -36px rgba(0, 0, 0, .9), 0 6px 18px -8px rgba(0, 0, 0, .45);
+  --node-bg: rgba(34, 36, 42, .7);
+  --arc-rgb: 91, 141, 239;
+  --arc: #5b8def; --arc-hi: #7ea6f5; --arc-ink: #9dbbff; --arc-bg: rgba(var(--arc-rgb), .13); --arc-line: rgba(var(--arc-rgb), .5); --on-arc: #050b18;
+  --ember-rgb: 255, 181, 71;
+  --ember: #ffb547; --ember-hi: #ffd596; --ember-ink: #ffc56b; --ember-bg: rgba(var(--ember-rgb), .12); --ember-line: rgba(var(--ember-rgb), .5); --on-ember: #1f1300;
+  /* running work speaks in the system colour */
+  --teal: var(--arc); --teal-ink: var(--arc-ink); --teal-bg: var(--arc-bg); --teal-line: var(--arc-line);
+  --green: #3fd18b; --green-dim: #258a5c; --green-bg: rgba(63, 209, 139, .12);
+  --red: #ff6b63; --red-bg: rgba(255, 107, 99, .12);
+  --neon-red: #ff6b63; --neon-red-rgb: 255, 107, 99; --neon-red-bg: rgba(255, 107, 99, .14); --neon-red-line: rgba(255, 107, 99, .55); --red-neon: var(--neon-red);
+  --violet: #a594ff; --violet-bg: rgba(165, 148, 255, .13);
+  --grey: #7f858e; --grey-2: #4a4e56; --grey-bg: rgba(255, 255, 255, .06);
+  /* tools: each keeps its own brand colour and logo (owner's call, 2026-11-14): Claude orange, agy dark blue */
+  --claude: #d97757; --claude-ink: #f2a483; --claude-bg: rgba(217, 119, 87, .15);
+  --agy: #2a46c4; --agy-ink: #93abff; --agy-bg: rgba(42, 70, 196, .22);
+  /* load tiers: one hue each, kept clear of the state colours (blue live, amber needs you, red out) */
+  --tier-basic: #4cc9e0; --tier-light: #b9e36c; --tier-complex: #cf95ff; --tier-heavy: #ff7fa8;
+  /* the primary action is the white pill: the brightest object on the glass */
+  --primary: #f2f3f5; --primary-hi: #ffffff; --on-primary: #0d0e10;
+  --scrim: rgba(4, 5, 8, .45); --top-bg: rgba(14, 15, 19, .32);
+  --shadow: 0 24px 48px -20px rgba(0, 0, 0, .8), 0 4px 12px -4px rgba(0, 0, 0, .5);
+  --glow: 0 0 0 1px rgba(var(--arc-rgb), .45), 0 10px 26px -14px rgba(var(--arc-rgb), .55);
+  --glow-amber: 0 0 0 1px rgba(var(--ember-rgb), .4), 0 10px 26px -14px rgba(var(--ember-rgb), .45);
+  --glow-red: 0 0 0 1px rgba(var(--neon-red-rgb), .4), 0 10px 26px -14px rgba(var(--neon-red-rgb), .45);
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  /* headings and names: the display cut of the OS face, sentence case (no tracked caps) */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --fs-xs: 11px; --fs-sm: 12px; --fs: 13px; --fs-md: 14px; --fs-lg: 18px; --fs-xl: 22px; --fs-kpi: 32px;
+  --track: 0;
+  --r: 20px; --r-sm: 12px; --r-xs: 8px;
+  --side-w: 240px; --top-h: 60px; --gap: 16px; --pad: 22px;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  /* interface scale (Settings → Interface scale; 85% by default). Viewport units divide by it so
+     full-height parts still fill the window inside the zoomed body. */
+  --z: .85; --vh: calc(100vh / var(--z)); --vw: calc(100vw / var(--z));
+}
+body { zoom: var(--z); }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { background: #121317; height: 100%; }
+body { margin: 0; min-height: 100%; background: transparent; color: var(--text); font: 400 var(--fs)/1.5 var(--font);
+  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; text-rendering: optimizeLegibility; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+code, pre, kbd, .mono { font-family: var(--mono); font-size: .94em; }
+::selection { background: rgba(var(--arc-rgb), .35); color: var(--text); }
+input, textarea { caret-color: var(--arc); }
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: var(--line-3); border-radius: 9px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--arc); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+svg.i.sm { width: 14px; height: 14px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.ink-ember { color: var(--ember-ink); }
+.ink-teal { color: var(--teal-ink); }
+.ink-red { color: var(--red); }
+.ink-neon-red, .ink-red-neon { color: var(--neon-red); }
+.ink-green { color: var(--green); }
+
+/* Status: shape + word + hue. data-s: need | run | queue | done | fail | fb | stale | stopped | out */
+.sd { display: inline-block; width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--grey); position: relative; }
+.sd[data-s="run"] { background: var(--teal); }
+.sd[data-s="run"]::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--teal); opacity: 0;
+  animation: ping 1.8s var(--ease) infinite; }
+.sd[data-s="need"] { background: var(--ember); border-radius: 1px; transform: rotate(45deg) scale(.92); }
+.sd[data-s="queue"], .sd[data-s="idle"] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--grey); }
+.sd[data-s="done"] { background: var(--green); }
+.sd[data-s="fail"], .sd[data-s="out"] { background: var(--red); border-radius: 2px; }
+.sd[data-s="fb"] { background: transparent; width: 0; height: 0; border-radius: 0; border: 5px solid transparent; border-left: 8px solid var(--violet); border-right: 0; }
+.sd[data-s="stale"], .sd[data-s="stopped"] { background: var(--grey); border-radius: 2px; }
+@keyframes ping { 0% { transform: scale(.6); opacity: .9; } 80%, 100% { transform: scale(1.6); opacity: 0; } }
+.st { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; color: var(--muted); }
+.st[data-s="run"] { color: var(--teal-ink); } .st[data-s="need"] { color: var(--ember-ink); } .st[data-s="done"] { color: var(--green); }
+.st[data-s="fail"], .st[data-s="out"] { color: var(--red); } .st[data-s="fb"] { color: var(--violet); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}

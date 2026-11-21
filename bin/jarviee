@@ -1,0 +1,229 @@
+#!/usr/bin/env python3
+"""jarviee: CLI and launcher for the Jarviee command center."""
+import argparse
+import json
+import os
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+import webbrowser
+from pathlib import Path
+
+# Resolve real path across symlinks
+REAL_PATH = Path(__file__).resolve()
+REPO_ROOT = REAL_PATH.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from hub import brand, entry, service
+from hub.config import load_config
+from hub.server_health import check_health, check_health_info
+
+
+def show_failure_alert(log_path):
+    if sys.platform != "darwin":
+        return
+    msg = f"Jarviee failed to start within 10 seconds.\\n\\nCheck server log at:\\n{log_path}"
+    cmd = ["osascript", "-e", f'display dialog "{msg}" with title "Jarviee" buttons {{"OK"}} default button "OK" with icon stop']
+    try:
+        subprocess.run(cmd, capture_output=True)
+    except OSError:
+        pass
+
+
+def ensure_running(cfg, open_browser=True):
+    ok, started = entry.start_server_if_down(cfg)
+    port = cfg.get("port", 7777)
+    url = f"http://127.0.0.1:{port}/"
+    if not ok:
+        log_file = entry.DEFAULT_LOG_PATH
+        if not sys.stdin.isatty():
+            show_failure_alert(str(log_file))
+        print(f"error: Jarviee failed to start within 10 seconds. Check logs at {log_file}", file=sys.stderr)
+        return 1
+
+    if open_browser:   # the server opens the iTerm2 grid and the dashboard's own Safari window (hub/browser.py)
+        r = _call(cfg, "POST", "/api/action/open-dashboard", quiet=True)
+        if not (r or {}).get("ok"):
+            if sys.platform == "darwin":
+                subprocess.run(["open", url], capture_output=True)
+            else:
+                webbrowser.open(url)
+    print(f"Jarviee → {url}")
+    return 0
+
+
+def cmd_status(cfg):
+    from hub import toggle
+    if toggle.is_disabled(cfg):
+        print("Jarviee is disabled (jarviee --enable turns it back on)")
+        return 1
+    ok, info = check_health_info(cfg)
+    if ok:
+        print(f"Jarviee is running (port {info.get('port')}, pid {info.get('pid')})")
+        return 0
+    print("Jarviee is stopped")
+    return 1
+
+
+def cmd_stop(cfg):
+    entry.stop_server(cfg)
+    print("Jarviee is stopped")
+    return 0
+
+
+def cmd_restart(cfg):
+    entry.stop_server(cfg)
+    return ensure_running(cfg, open_browser=False)
+
+
+def cmd_logs(cfg, lines=40):
+    service.logs(lines=lines)
+    return 0
+
+
+def _call(cfg, method, path, quiet=False):
+    """Talk to the running server. Returns parsed JSON, or None (message printed unless quiet) if it is down."""
+    from hub import auth
+    url = f"http://127.0.0.1:{cfg.get('port', 7777)}{path}"
+    headers = {"Content-Type": "application/json"}
+    data = None
+    if method == "POST":
+        headers[brand.TOKEN_HEADER] = auth.get_token(cfg)
+        data = b"{}"
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    try:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(req, timeout=5) as resp:
+            return json.loads(resp.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        if not quiet:
+            print(f"Jarviee answered {e.code}", file=sys.stderr)
+    except (urllib.error.URLError, OSError):
+        if not quiet:
+            print("Jarviee isn't running (start it with: jarviee)", file=sys.stderr)
+    return None
+
+
+def cmd_glance(cfg, as_json=False):
+    g = _call(cfg, "GET", "/api/glance")
+    if g is None:
+        return 2
+    if as_json:
+        print(json.dumps(g, indent=2))
+        return 0
+    dot = "⏸" if g.get("paused") else "●"
+    line = f"{dot} {g['label']}"
+    wk = (g.get("quota") or {}).get("claude_week_used")
+    if wk is not None:
+        line += f" · Claude wk {round(wk)}%"
+    print(line)
+    return 0
+
+
+def cmd_action(cfg, name):
+    r = _call(cfg, "POST", f"/api/action/{name}")
+    if r is None:
+        return 2
+    if r.get("ok"):
+        print("ok" + (f" ({r['id']})" if r.get("id") else ""))
+        return 0
+    print(r.get("reason") or r.get("error") or "failed", file=sys.stderr)
+    return 1
+
+
+def main(argv=None):
+    cfg = load_config()
+    ap = argparse.ArgumentParser(prog="jarviee", description=__doc__)
+    ap.add_argument("--no-open", action="store_true", help="start/verify server without opening browser")
+    onoff = ap.add_mutually_exclusive_group()
+    onoff.add_argument("--enable", action="store_true", help="put Jarviee back: hooks, status line, background service")
+    onoff.add_argument("--disable", action="store_true",
+                       help="take Jarviee out of your setup: stop the service, remove its hooks and status line")
+    ap.add_argument("--dry-run", action="store_true", help="with --enable / --disable: show what would change")
+    sub = ap.add_subparsers(dest="subcmd")
+
+    sub.add_parser("status", help="check if server is running (exit 0) or stopped (exit 1)")
+    sub.add_parser("stop", help="stop the running server")
+    sub.add_parser("restart", help="restart the server")
+    logs_p = sub.add_parser("logs", help="view server logs")
+    logs_p.add_argument("-n", "--lines", type=int, default=40)
+    sub.add_parser("open", help="open the dashboard in browser")
+
+    glance_p = sub.add_parser("glance", help="one-line summary of what needs you")
+    glance_p.add_argument("--json", action="store_true", help="print the full JSON")
+    sub.add_parser("pause", help="pause the task queue")
+    sub.add_parser("resume", help="resume the task queue")
+    sub.add_parser("next", help="jump to the iTerm2 pane that needs you (else the newest running)")
+
+    run_p = sub.add_parser("run", help="launch a task on the matching model")
+    run_p.add_argument("task")
+    run_p.add_argument("--tool", choices=["auto", "agy", "claude", "echo"], default="auto")
+    run_p.add_argument("--tier", choices=["basic", "light", "complex", "heavy", "standard"])
+    run_p.add_argument("--project", help="project name (defaults to current project from cwd)")
+    run_p.add_argument("--wait", action="store_true")
+    run_p.add_argument("--inline", action="store_true")
+
+    plan_p = sub.add_parser("plan", help="plan a goal into subtasks")
+    plan_p.add_argument("goal")
+    plan_p.add_argument("--project", help="project name (defaults to current project from cwd)")
+    plan_p.add_argument("--yes", "-y", action="store_true")
+
+    args, unknown = ap.parse_known_args(argv)
+
+    from hub import toggle
+    if args.enable or args.disable:
+        fn = toggle.enable if args.enable else toggle.disable
+        sys.exit(fn(cfg, dry_run=args.dry_run))
+    if toggle.is_disabled(cfg) and args.subcmd in (None, "open", "restart", "run", "plan"):
+        print(toggle.DISABLED_HINT, file=sys.stderr)
+        sys.exit(3)
+
+    if not args.subcmd:
+        sys.exit(ensure_running(cfg, open_browser=not args.no_open))
+
+    if args.subcmd == "status":
+        sys.exit(cmd_status(cfg))
+    elif args.subcmd == "stop":
+        sys.exit(cmd_stop(cfg))
+    elif args.subcmd == "restart":
+        sys.exit(cmd_restart(cfg))
+    elif args.subcmd == "logs":
+        sys.exit(cmd_logs(cfg, lines=args.lines))
+    elif args.subcmd == "glance":
+        sys.exit(cmd_glance(cfg, as_json=args.json))
+    elif args.subcmd in ("pause", "resume"):
+        sys.exit(cmd_action(cfg, args.subcmd))
+    elif args.subcmd == "next":
+        sys.exit(cmd_action(cfg, "show-next"))
+    elif args.subcmd == "open":
+        sys.exit(ensure_running(cfg, open_browser=True))
+    elif args.subcmd in ("run", "plan"):
+        # Auto-detect project if not supplied
+        proj = args.project or entry.detect_project_from_dir()
+        hub_py = str(REPO_ROOT / "hub.py")
+        cmd = [service.get_python_exe(), hub_py, args.subcmd]
+        if args.subcmd == "run":
+            cmd.append(args.task)
+            if args.tool and args.tool != "auto":
+                cmd.extend(["--tool", args.tool])
+            if args.tier:
+                cmd.extend(["--tier", args.tier])
+            if args.wait:
+                cmd.append("--wait")
+            if args.inline:
+                cmd.append("--inline")
+        elif args.subcmd == "plan":
+            cmd.append(args.goal)
+            if args.yes:
+                cmd.append("--yes")
+        if proj:
+            cmd.extend(["--project", proj])
+        cmd.extend(unknown)
+        res = subprocess.run(cmd)
+        sys.exit(res.returncode)
+
+
+if __name__ == "__main__":
+    main()

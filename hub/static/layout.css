@@ -1,0 +1,202 @@
+/* layout.css: the cleaned-up shell and Command Center (2026-11-14). Loaded last.
+   Sidebar groups with icons, Settings pinned to the bottom, collapsible sections, the agent detail accordion,
+   and the fixes that keep side-by-side panels from leaving empty space. */
+
+/* ---------- sidebar: grouped routes, settings at the bottom ---------- */
+.side { gap: 14px; }
+.brand .sub { margin-top: 6px; }
+.nav { gap: 1px; }
+.nav a { height: 36px; gap: 12px; }
+.nav svg.ni { width: 18px; height: 18px; stroke-width: 1.45; color: var(--muted); transition: color .15s; }
+.nav a:hover svg.ni { color: var(--text-2); }
+.nav a[aria-current="page"] svg.ni { color: var(--arc-ink); }
+.nav-group { display: flex; flex-direction: column; gap: 1px; margin-top: 12px; }
+.nav-h { display: block; padding: 0 12px 6px; font: 600 var(--fs-sm)/1.3 var(--font); color: var(--faint); }
+
+.side-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.side-sys { border-radius: var(--r-sm); }
+.side-sys > summary { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 12px; border-radius: var(--r-sm); list-style: none; cursor: pointer;
+  color: var(--muted); font-weight: 500; user-select: none; }
+.side-sys > summary::-webkit-details-marker { display: none; }
+.side-sys > summary:hover { color: var(--text); background: var(--panel-2); }
+.side-sys > summary:focus-visible { outline: 2px solid var(--arc); outline-offset: -2px; }
+.sys-sum { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font: 500 11px var(--mono); color: var(--muted); white-space: nowrap; }
+.sys-sum .sd { width: 6px; height: 6px; }
+.sys-sum[data-s="fail"] { color: var(--red); }
+.sys-sum[data-s="need"] { color: var(--ember-ink); }
+.side-sys .chev { color: var(--faint); transition: transform .18s var(--ease); }
+.side-sys[open] .chev { transform: rotate(90deg); }
+.side-sys #sys { margin: 4px 0 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); }
+.nav-foot { flex-direction: row; align-items: center; gap: 4px; }
+.nav-foot a { flex: 1; min-width: 0; }
+.keys-btn { display: inline-grid; place-items: center; width: 32px; height: 32px; flex: none; padding: 0; border: 1px solid transparent; border-radius: var(--r-sm);
+  background: transparent; cursor: pointer; }
+.keys-btn:hover { background: var(--panel-2); border-color: var(--line); }
+.keys-btn:focus-visible { outline: 2px solid var(--arc); outline-offset: 1px; }
+
+/* top bar search */
+.top-search { gap: 8px; color: var(--muted); }
+.top-search .kbd { margin-left: 2px; }
+
+/* narrow window: icon rail. Group names become thin dividers, the system row keeps its status dot */
+@media (max-width: 1180px) {
+  .nav-h, .sys-sum span, .side-sys .chev, .keys-btn, .side-sys #sys { display: none; }
+  .nav-group { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--rule); }
+  .side-sys > summary { justify-content: center; padding: 0; position: relative; }
+  .side-sys > summary .lbl { display: none; }
+  .sys-sum { position: absolute; top: 7px; right: 12px; margin: 0; }
+  .side-bottom { padding-top: 8px; }
+  .nav .cnt { top: 0; right: -7px; }   /* the badge sits on the icon's corner, not over it */
+}
+@media (max-width: 760px) {
+  .side .nav-h, .side .sys-sum span, .side .side-sys .chev, .side .keys-btn { display: revert; }
+  .side .keys-btn { display: inline-grid; }
+  .side .nav-group { margin-top: 12px; padding-top: 0; border-top: 0; }
+  .side .side-sys > summary { justify-content: flex-start; padding: 0 12px; }
+  .side .side-sys > summary .lbl { display: inline; }
+  .side .sys-sum { position: static; margin-left: auto; }
+  .side .side-sys[open] #sys { display: block; }
+}
+
+/* ---------- Command Center ---------- */
+#kpis { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.35fr); }
+@media (max-width: 1100px) { #kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- whitespace: rows of panels end on one line ---------- */
+/* Analytics: six KPI tiles fill whole rows (6, then 3 + 3, then 2 + 2 + 2); paired panels share a height */
+.an-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 1360px) { .an-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .an-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.an-grid { align-items: stretch; }
+.an-grid > .panel { display: flex; flex-direction: column; }
+.an-grid > .panel > .pb { flex: 1; }
+/* Settings: two real columns of about equal weight (the newspaper flow left cards on no common line). The last
+   panel of each column grows, so both columns end on one line. */
+@media (min-width: 1101px) {
+  .set-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+  .set-col { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+  .set-col > .panel:last-child { flex: 1 0 auto; }
+}
+
+/* Active agents spans the row; "For you" sits under it, waiting-on-you and today side by side */
+.cc-main { grid-template-columns: minmax(0, 1fr); }
+.cc-main > .panel:first-child { display: flex; flex-direction: column; }
+.fy { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 0 28px; align-items: start; }
+.fy-col { min-width: 0; }
+@media (max-width: 900px) { .fy { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
+
+.c-t .sub-p { color: var(--text-2); }
+.c-t .sub-dot { margin: 0 6px; color: var(--faint); }
+/* quick actions: one quiet strip along the bottom of the agents panel */
+.cc-main .quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px; border-top: 1px solid var(--rule); }
+.cc-main .qa { min-height: 30px; padding: 0 10px; background: transparent; }
+.cc-main .qa svg.i { width: 14px; height: 14px; }
+
+.owner-h { margin-top: 0 !important; }
+#cc-today .owner-h + .owner-list, #cc-today .owner-h + .today-sum { margin-top: 4px; }
+.owner-none { display: flex; align-items: center; gap: 9px; font-size: var(--fs-sm); color: var(--muted); }
+.today-sum { margin-top: 6px; font-size: var(--fs-sm); }
+.today-spend { display: flex; gap: 16px; margin: 8px 0 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel-2);
+  font-size: var(--fs-sm); color: var(--muted); }
+.today-spend b { margin-right: 4px; color: var(--text); font-weight: 600; }
+.today-spend:hover { border-color: var(--line-3); }
+
+/* collapsible sections: a panel whose header is the toggle */
+.cc-more { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.acc > summary { list-style: none; cursor: pointer; user-select: none; border-bottom-color: transparent; }
+.acc > summary::-webkit-details-marker { display: none; }
+.acc[open] > summary { border-bottom-color: var(--rule); }
+.acc > summary:hover h2 { color: var(--text); }
+.acc > summary:focus-visible { outline: 2px solid var(--arc); outline-offset: -2px; border-radius: var(--r); }
+.acc .chev { flex: none; color: var(--muted); transition: transform .18s var(--ease); }
+.acc[open] .chev { transform: rotate(90deg); color: var(--arc); }
+.acc-sum { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; font-size: var(--fs-sm); color: var(--text-2); white-space: nowrap; }
+.acc-sum > span { overflow: hidden; text-overflow: ellipsis; }
+.acc-sum .sd { flex: none; }
+.acc[open] .acc-sum { display: none; }
+.acc .legend-inline { display: none; margin-left: auto; }
+.acc[open] .legend-inline { display: flex; }
+.acc-b { min-width: 0; }
+.acc .cc-a { gap: 0; }
+.acc .detail-panel { border-top: 1px solid var(--rule); }
+@media (min-width: 1800px) { .acc .detail-panel { border-top: 0; border-left: 1px solid var(--rule); } }
+/* routing graph sizing lives in pages.css as container queries on the graph's own width (browser zoom and the
+   interface scale no longer pick the layout) */
+@media (prefers-reduced-motion: reduce) { .acc .chev, .side-sys .chev, .acc-sm .chev { transition: none; } }
+
+/* ---------- agent detail card ---------- */
+.ad-model { margin-top: 4px; gap: 8px; font-size: var(--fs-sm); color: var(--text-2); }
+.ad-model .num { font-size: 11.5px; }
+.ad-acts { align-items: center; }
+.ad-acts .spacer { flex: 1; }
+.dt-stats.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dt-stats.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.acc-sm { margin-top: 4px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel-2); }
+.acc-sm > summary { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; list-style: none; cursor: pointer; user-select: none;
+  font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); }
+.acc-sm > summary::-webkit-details-marker { display: none; }
+.acc-sm > summary .faint { margin-left: 4px; font-weight: 400; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.acc-sm > summary:hover { color: var(--text); }
+.acc-sm > summary:focus-visible { outline: 2px solid var(--arc); outline-offset: -2px; border-radius: var(--r-sm); }
+.acc-sm .chev { flex: none; color: var(--muted); transition: transform .18s var(--ease); }
+.acc-sm[open] .chev { transform: rotate(90deg); }
+.acc-sm[open] > summary { border-bottom: 1px solid var(--rule); }
+.acc-sm-b { display: flex; flex-direction: column; gap: 10px; padding: 12px 10px; }
+
+/* agents list: "show more" */
+.ag-more { display: flex; width: calc(100% - 28px); margin: 8px 14px 12px; justify-content: center; border: 1px dashed var(--line-2); }
+.ag-more[hidden] { display: none; }
+
+/* Agents and Review open their top item on a wide window, so closing the detail there has nothing to return to */
+@media (min-width: 1101px) { .ad-close, .rv-close { display: none; } }
+@media (max-width: 760px) { .side .brand .sub { display: block; } }
+
+/* ---------- Workflows ---------- */
+/* the graph leads; diagnostics and timeline are full-width sections under it (collapsed, they are one line each) */
+@media (min-width: 1800px) { .wf-grid { grid-template-columns: 270px minmax(0, 1fr); grid-template-areas: "lib main" "lib console" "lib tl"; } }
+.wf-acts { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.wf-acts .acts { min-width: 0; }
+.wf-head + #wf-stages { padding-top: 0; }
+#wf-stages:not(:empty) { padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+.job-tab .tab-close { opacity: .55; }
+.job-tab:hover .tab-close, .job-tab .tab-close:focus-visible { opacity: 1; }
+
+/* Workflows: the page fills the window. The graph takes the free height (its dot grid grows), the two collapsed
+   accordions sit at the bottom level with the library's foot, so no empty bands open between them (owner, 2026-11-15). */
+@media (min-width: 761px) {
+  .wf-grid { grid-template-rows: minmax(0, 1fr) auto auto; min-height: calc(var(--vh) - var(--top-h) - var(--pad) * 2); align-items: stretch; }
+  .wf-main { display: flex; flex-direction: column; min-height: 0; }
+  .wf-main > .wf-graph { flex: 1 1 auto; max-height: none; }
+}
+@media (min-width: 1800px) {
+  .wf-lib-p { align-self: stretch; max-height: calc(var(--vh) - var(--top-h) - var(--pad) * 2); }
+}
+
+/* Task Queue with no plans: the empty state fills the rest of the window instead of a thin note over blank glass */
+@media (min-width: 761px) {
+  .page[data-page="tasks"] { min-height: calc(var(--vh) - var(--top-h)); }
+  .page[data-page="tasks"] > .plans:has(> .plans-empty:only-child) { flex: 1 1 auto; }
+  .plans-empty { flex: 1 1 auto; display: grid; place-items: center; min-height: 240px; }
+}
+.plans-empty .empty { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 420px; padding: 40px 20px; text-align: center; }
+.plans-empty .empty > svg.i { width: 28px; height: 28px; color: var(--muted); }
+.plans-empty .empty > b { font: 600 16px/1.3 var(--font-display); color: var(--text); }
+.plans-empty .empty > span { color: var(--muted); }
+.plans-empty .empty .btn { margin-top: 6px; }
+
+/* Routing: the detail under (or beside) the graph shows only for a clicked node; closed, the graph has the room */
+.detail-panel[hidden] { display: none !important; }
+.detail-panel { position: relative; }
+.dt-close { position: absolute; top: 10px; right: 10px; z-index: 3; }
+.cc-a:has(> .detail-panel[hidden]) { grid-template-columns: minmax(0, 1fr) !important; }
+/* Workflows: the graph sits in the middle of its (now taller) panel; auto margins keep the top reachable when it overflows */
+.wf-graph { display: flex; flex-direction: column; }
+.wf-graph > .gsizer { margin: auto; flex: none; }
+
+/* Agents detail: the steps list takes the pane's free height and scrolls inside it; the Details row stays visible */
+@media (min-width: 1101px) {
+  .ag-detail:not(:has(.empty.pad)) { display: flex; flex-direction: column; overflow: hidden; }
+  .ag-detail > .ad-body { flex: 1 1 0; min-height: 0; overflow-y: auto; }
+  .ag-detail > .ad-body > #ag-stream { flex: 1 1 0; min-height: 120px; overflow-y: auto; }
+  .ag-detail > .ad-body > #ag-stream > .stream { min-height: 100%; }
+}

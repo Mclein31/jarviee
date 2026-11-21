@@ -1,0 +1,469 @@
+{
+  "port": 7777,
+  "db_path": "~/.jarviee/hub.db",
+  "logs_dir": "~/.jarviee/logs",
+  "complex_job_duration_seconds": 60,
+  "complex_job_min_steps": 2,
+  "finished_job_retention_seconds": 300,
+  "obsidian": {
+    "workspace_root": "~/Projects",
+    "global_brain": "_BRAIN",
+    "project_brain_dir": ".brain",
+    "context_files": [
+      "PROJECT_CONTEXT.md",
+      "TODO.md",
+      "DECISIONS.md"
+    ],
+    "status_file": "_BRAIN/PROJECT_STATUS.md",
+    "runs_file": "AGENT_RUNS.md",
+    "inject_project_note": true,
+    "max_context_chars": 6000
+  },
+  "default_tool": "agy",
+  "terminal": {
+    "mode": "iterm2",
+    "window_name": "Jarviee",
+    "max_panes_per_tab": 6,
+    "layout": "split",
+    "grid": [4, 2],
+    "font_size": null,
+    "display": "main",
+    "fullscreen": false,
+    "position": "right",
+    "width_pct": 60,
+    "focus_on_launch": true,
+    "close_on_finish": "never",
+    "interactive": true,
+    "queue_interactive": true
+  },
+  "dashboard_window": {"browser": "default", "display": "main"},
+  "tools": {
+    "agy": {
+      "command": [
+        "agy",
+        "-p",
+        "{prompt}",
+        "--model",
+        "{model}",
+        "--mode",
+        "auto"
+      ],
+      "bridge_command": [
+        "agy-headless-bridge",
+        "-p",
+        "{prompt}",
+        "--model",
+        "{model}",
+        "--mode",
+        "auto"
+      ],
+      "models": {
+        "basic": "gemini-3.8-flash-low",
+        "light": "gemini-4-hydrogen-medium",
+        "complex": "gemini-pro-orchestrator-neon",
+        "heavy": "gemini-4-neon-high"
+      },
+      "efforts": {
+        "basic": "low",
+        "light": "medium",
+        "complex": "high",
+        "heavy": "xhigh"
+      },
+      "effort_in_model": true,
+      "effort_levels": {
+        "gemini-3.8-flash": ["low", "medium", "high"],
+        "gemini-4-hydrogen": ["low", "medium", "high", "xhigh"],
+        "gemini-4-argon": ["low", "medium", "high"],
+        "gemini-4-neon": ["low", "medium", "high", "xhigh"],
+        "gemini-pro-orchestrator": [],
+        "gpt-oss-120b": ["medium"],
+        "*": ["low", "medium", "high"]
+      },
+      "model_preference": ["gemini-4-hydrogen-{effort}", "gemini-3.8-flash-{effort}", "gemini-4-argon-{effort}"],
+      "effort_args": [
+        "--effort",
+        "{effort}"
+      ]
+    },
+    "claude": {
+      "command": [
+        "claude",
+        "-p",
+        "{prompt}",
+        "--model",
+        "{model}",
+        "--permission-mode",
+        "auto"
+      ],
+      "models": {
+        "basic": "haiku",
+        "light": "sonnet",
+        "complex": "sonnet",
+        "heavy": "opus"
+      },
+      "efforts": {
+        "basic": "low",
+        "light": "low",
+        "complex": "medium",
+        "heavy": "high"
+      },
+      "effort_levels": {
+        "haiku": ["low", "medium", "high", "xhigh", "max"],
+        "sonnet": ["low", "medium", "high", "xhigh", "max"],
+        "opus": ["low", "medium", "high", "xhigh", "max"],
+        "claude-fable": ["low", "medium", "high", "xhigh", "max"],
+        "*": ["low", "medium", "high", "xhigh", "max"]
+      },
+      "effort_args": [
+        "--effort",
+        "{effort}"
+      ],
+      "session_args": ["--session-id", "{session}"],
+      "resume_args": ["--resume", "{session}"]
+    },
+    "omniroute": {
+      "command": [
+        "claude",
+        "-p",
+        "{prompt}",
+        "--model",
+        "{model}",
+        "--permission-mode",
+        "auto"
+      ],
+      "env_from": "omniroute",
+      "models": {
+        "basic": "claude/combo/jarviee-basic",
+        "light": "claude/combo/jarviee-light",
+        "complex": "claude/combo/jarviee-complex",
+        "heavy": "claude/combo/jarviee-heavy"
+      },
+      "efforts": {
+        "basic": "low",
+        "light": "low",
+        "complex": "medium",
+        "heavy": "high"
+      },
+      "effort_levels": {
+        "*": ["low", "medium", "high"]
+      },
+      "session_args": ["--session-id", "{session}"],
+      "resume_args": ["--resume", "{session}"]
+    },
+    "echo": {
+      "command": [
+        "python3",
+        "-c",
+        "import sys,time; time.sleep(1); print('fake agent ran with model', sys.argv[1]); print(sys.argv[2][:200])",
+        "{model}",
+        "{prompt}"
+      ],
+      "models": {
+        "basic": "fake-small",
+        "light": "fake-mid",
+        "complex": "fake-large",
+        "heavy": "fake-max"
+      },
+      "efforts": {
+        "basic": "low",
+        "light": "low",
+        "complex": "medium",
+        "heavy": "high"
+      },
+      "effort_args": [
+        "--effort",
+        "{effort}"
+      ]
+    }
+  },
+  "classifier": {
+    "llm_fallback": {
+      "enabled": false,
+      "timeout_s": 3
+    },
+    "basic_keywords": [
+      "bump",
+      "bump version",
+      "capitalize",
+      "change color",
+      "change colour",
+      "change label",
+      "change text",
+      "color",
+      "colour",
+      "comment",
+      "config value",
+      "copy",
+      "delete file",
+      "docstring",
+      "fix import",
+      "format",
+      "indent",
+      "label",
+      "lint",
+      "move file",
+      "one-line",
+      "readme",
+      "reformat",
+      "remove unused",
+      "rename",
+      "sort imports",
+      "spelling",
+      "translate string",
+      "typo",
+      "update version",
+      "version bump",
+      "whitespace",
+      "wording"
+    ],
+    "heavy_keywords": [
+      "architecture",
+      "architect",
+      "cross-cutting",
+      "across the codebase",
+      "whole project",
+      "every module",
+      "migrate",
+      "migration",
+      "security",
+      "auth",
+      "authentication",
+      "authorization",
+      "oauth",
+      "jwt",
+      "sso",
+      "password",
+      "csrf",
+      "xss",
+      "encryption",
+      "auth token",
+      "access token",
+      "refresh token",
+      "bearer token",
+      "permissions model",
+      "concurrency",
+      "race condition",
+      "deadlock",
+      "memory leak",
+      "hard to reproduce",
+      "intermittent",
+      "flaky",
+      "from scratch",
+      "design system",
+      "data model redesign"
+    ],
+    "heavy_word_count": 60,
+    "basic_max_word_count": 20,
+    "light_keywords": [
+      "small",
+      "simple",
+      "tiny",
+      "single file",
+      "add a button",
+      "toggle",
+      "component",
+      "docs",
+      "documentation",
+      "document",
+      "unit test",
+      "add a test",
+      "write tests",
+      "tests for",
+      "helper",
+      "tooltip",
+      "validation message",
+      "fix a bug in",
+      "quick fix",
+      "style",
+      "css",
+      "readme section",
+      "dark mode"
+    ],
+    "complex_keywords": [
+      "feature",
+      "multi-file",
+      "multiple files",
+      "api",
+      "endpoint",
+      "database",
+      "db",
+      "schema",
+      "query",
+      "bug",
+      "debug",
+      "refactor",
+      "integrate",
+      "integration",
+      "implement",
+      "implement feature",
+      "build a",
+      "build an",
+      "pagination",
+      "caching",
+      "cache",
+      "performance",
+      "optimize",
+      "test suite",
+      "end to end",
+      "algorithm",
+      "rewrite",
+      "state management",
+      "websocket"
+    ]
+  },
+  "dispatch": {
+    "basic": {
+      "tool": "agy",
+      "model": "gemini-3.8-flash-low"
+    },
+    "light": {
+      "tool": "agy",
+      "model": "gemini-4-hydrogen-medium"
+    },
+    "complex": {
+      "tool": "claude",
+      "model": "sonnet"
+    },
+    "heavy": {
+      "tool": "claude",
+      "model": "opus"
+    }
+  },
+  "prefer_agy_on_borderline": false,
+  "fallback": {
+    "enabled": true,
+    "never_fallback_to_opus": true,
+    "use_available_tool": true,
+    "max_hops": 2,
+    "equivalents": {
+      "agy:gemini-3.8-flash-low": [
+        "claude:haiku"
+      ],
+      "agy:gemini-4-hydrogen-medium": [
+        "claude:sonnet"
+      ],
+      "agy:gemini-4-hydrogen-high": [
+        "claude:sonnet"
+      ],
+      "agy:gemini-pro-orchestrator-neon": [
+        "claude:sonnet"
+      ],
+      "agy:gemini-4-neon-high": [
+        "claude:sonnet"
+      ],
+      "agy:gemini-4-neon-xhigh": [
+        "claude:sonnet"
+      ],
+      "agy:gemini-4-argon-medium": [
+        "claude:sonnet"
+      ],
+      "agy:gemini-4-argon-high": [
+        "claude:sonnet"
+      ],
+      "claude:haiku": [
+        "agy:gemini-3.8-flash-low"
+      ],
+      "claude:sonnet": [
+        "agy:gemini-pro-orchestrator-neon",
+        "agy:gemini-4-hydrogen-medium",
+        "agy:gemini-4-argon-medium",
+        "agy:gemini-3.8-flash-low"
+      ],
+      "claude:opus": [
+        "claude:sonnet",
+        "agy:gemini-4-neon-high",
+        "agy:gemini-4-hydrogen-medium",
+        "agy:gemini-4-argon-medium"
+      ],
+      "claude:claude-fable-5-2": [
+        "claude:sonnet",
+        "agy:gemini-4-neon-high",
+        "agy:gemini-4-hydrogen-medium",
+        "agy:gemini-4-argon-medium"
+      ]
+    }
+  },
+  "omniroute": {
+    "enabled": false,
+    "base_url": "http://127.0.0.1:20128",
+    "keychain_service": "jarviee-omniroute",
+    "health_path": "/v1/models",
+    "health_timeout_s": 2,
+    "health_cache_s": 30
+  },
+  "calendar": {"enabled": false},
+  "maps": {"auto_update": false},
+  "retry": {"enabled": true, "max": 3},
+  "lanes": {
+    "agy": 2,
+    "claude": 1
+  },
+  "escalation": {
+    "to_level": "complex",
+    "to_tool": "claude",
+    "max": 1,
+    "log_tail_chars": 4000,
+    "blocked_patterns": [
+      "i'm blocked",
+      "i am blocked",
+      "blocked:",
+      "cannot proceed",
+      "can't proceed",
+      "unable to complete",
+      "need more information",
+      "permission denied",
+      "quota exceeded",
+      "5-hour limit",
+      "no output produced",
+      "auto-denied",
+      "permission that headless mode cannot prompt"
+    ]
+  },
+  "quota_patterns": [
+    "quota exceeded",
+    "rate limit",
+    "out of credits",
+    "insufficient credits",
+    "usage limit",
+    "5-hour limit",
+    "hit your"
+  ],
+  "planner": {
+    "tool": "claude",
+    "model": "opus",
+    "context_files": [
+      "PROJECT_CONTEXT.md",
+      "ARCHITECTURE.md",
+      "TODO.md"
+    ],
+    "max_context_chars": 12000,
+    "timeout": 300
+  },
+  "review": {
+    "enabled": true,
+    "tool": "claude",
+    "model": "sonnet",
+    "skill": "code-reviewer",
+    "timeout": 600
+  },
+  "pipeline": {
+    "enabled": true,
+    "planner": "claude",
+    "research": {"enabled": true, "level": "complex"},
+    "analysis": {"enabled": true, "level": "light"},
+    "fact_check": {"enabled": true, "level": "light"},
+    "test": {"enabled": false, "level": "complex"},
+    "review": {"enabled": true},
+    "max_fix_rounds": 2,
+    "research_chars": 6000,
+    "skills": {
+      "research": "",
+      "analysis": "",
+      "plan": "",
+      "fact_check": "",
+      "build": "",
+      "review": ""
+    }
+  },
+  "voice": {"enabled": false, "live_reports": false, "engine": "piper", "piper_speed": 1.25, "tldr_llm": true, "kokoro_voice": "bm_george", "voice": "Daniel", "rate": 175, "events": ["waiting", "failed", "done"], "muted": false, "debounce_s": 3, "duck_enabled": true, "duck_mode": "pause", "duck_volume": 20, "report_volume": 70}
+}

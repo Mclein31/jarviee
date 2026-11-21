@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Local design-review scratch output (screenshots, before/after snapshots)
+.design-review/
+
+# Impeccable live-session state
+.impeccable/
+
+# Editors
+.vscode/
+.idea/
+
+# Local runtime data (normally lives in ~/.agent-hub)
+*.db
+*.log
+
+# Playwright MCP page snapshots
+.playwright-mcp/
+
+# Public export local denylist & local-only workspaces/assets
+scripts/private_denylist.txt
+.omniroute-work/
+.claude/settings.local.json
+showcase/private/
